@@ -1449,6 +1449,9 @@ static int page_cache_read(struct file *file, pgoff_t offset)
  * it in the page cache, and handles the special cases reasonably without
  * having a lot of duplicated code.
  */
+pgoff_t previous_page=-1;
+// déclaration de variable stat pour renseigner le numéro de la page precedente
+
 int filemap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 {
 	int error;
@@ -1460,8 +1463,27 @@ int filemap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
 	pgoff_t size;
 	int did_readaround = 0;
 	int ret = 0;
+	
+	if(previous_page == -1)
+	{
+		previous_page = vmf->pgoff;
+	}
+	else
+	{
+		printk(" page = %u vers %u \n",previous_page,vmf->pgoff); // affiche la transition
+		previous_page = vmf->pgoff;
+	}
+
+	pgoff_t nb_pages = (vma->vm_end - vma->vm_start) >> PAGE_CACHE_SHIFT;
+	printk(" nombre de pages = %u", nb_pages);
+	
+
+
 	// size nombre de page du fichier à récuperer pour dimensionner la table de transition.
 	size = (i_size_read(inode) + PAGE_CACHE_SIZE - 1) >> PAGE_CACHE_SHIFT;
+	printk(" size= %u", size); // vérifier si size correspond au nombre de page du fichier à récuperer
+	
+	
 	if (vmf->pgoff >= size)
 		return VM_FAULT_SIGBUS;
 
